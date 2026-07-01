@@ -26,6 +26,7 @@ export const useDocumentStore = defineStore("document", () => {
     page?: number;
     category_id?: number;
     status?: string;
+    tag_id?: number;
   }) {
     loading.value = true;
     try {
@@ -35,6 +36,7 @@ export const useDocumentStore = defineStore("document", () => {
         page_size: pageSize.value,
         category_id: params?.category_id,
         status: params?.status,
+        tag_id: params?.tag_id,
       });
       documents.value = result.list;
       total.value = result.pagination.total;
