@@ -38,7 +38,7 @@ type UpdateDocumentInput struct {
 }
 
 // List 获取文档列表
-func (s *DocumentService) List(userID uint64, page, pageSize int, categoryID *uint64, status string) (*utils.PaginatedData, error) {
+func (s *DocumentService) List(userID uint64, page, pageSize int, categoryID *uint64, status string, tagID *uint64) (*utils.PaginatedData, error) {
 	var total int64
 	var documents []*models.Document
 
@@ -48,6 +48,10 @@ func (s *DocumentService) List(userID uint64, page, pageSize int, categoryID *ui
 	}
 	if status != "" {
 		query = query.Where("status = ?", status)
+	}
+	if tagID != nil {
+		query = query.Joins("JOIN document_tags ON document_tags.document_id = documents.id").
+			Where("document_tags.tag_id = ?", *tagID)
 	}
 
 	if err := query.Count(&total).Error; err != nil {
@@ -74,7 +78,7 @@ func (s *DocumentService) List(userID uint64, page, pageSize int, categoryID *ui
 }
 
 // Search 全文搜索
-func (s *DocumentService) Search(userID uint64, keyword string, page, pageSize int) (*utils.PaginatedData, error) {
+func (s *DocumentService) Search(userID uint64, keyword string, page, pageSize int, tagID *uint64, categoryID *uint64) (*utils.PaginatedData, error) {
 	var total int64
 	var documents []*models.Document
 
@@ -85,6 +89,13 @@ func (s *DocumentService) Search(userID uint64, keyword string, page, pageSize i
 			fmt.Sprintf("%%%s%%", keyword),
 			fmt.Sprintf("%%%s%%", keyword),
 		)
+	if tagID != nil {
+		query = query.Joins("JOIN document_tags ON document_tags.document_id = documents.id").
+			Where("document_tags.tag_id = ?", *tagID)
+	}
+	if categoryID != nil {
+		query = query.Where("category_id = ?", *categoryID)
+	}
 
 	if err := query.Count(&total).Error; err != nil {
 		return nil, errors.New("搜索失败")
@@ -242,4 +253,36 @@ func (s *DocumentService) Delete(userID uint64, id uint64) error {
 		return errors.New("文档不存在")
 	}
 	return result.Error
+}
+
+// GetVersions 获取文档版本列表
+func (s *DocumentService) GetVersions(userID uint64, documentID uint64) ([]*models.DocumentVersion, error) {
+	// 验证文档属于当前用户
+	var count int64
+	if err := s.DB.Model(&models.Document{}).Where("id = ? AND user_id = ?", documentID, userID).Count(&count).Error; err != nil || count == 0 {
+		return nil, errors.New("文档不存在")
+	}
+
+	var versions []*models.DocumentVersion
+	if err := s.DB.Where("document_id = ?", documentID).
+		Order("version DESC").
+		Find(&versions).Error; err != nil {
+		return nil, errors.New("获取版本列表失败")
+	}
+	return versions, nil
+}
+
+// GetVersion 获取文档指定版本
+func (s *DocumentService) GetVersion(userID uint64, documentID uint64, versionID uint64) (*models.DocumentVersion, error) {
+	// 验证文档属于当前用户
+	var count int64
+	if err := s.DB.Model(&models.Document{}).Where("id = ? AND user_id = ?", documentID, userID).Count(&count).Error; err != nil || count == 0 {
+		return nil, errors.New("文档不存在")
+	}
+
+	var version models.DocumentVersion
+	if err := s.DB.Where("id = ? AND document_id = ?", versionID, documentID).First(&version).Error; err != nil {
+		return nil, errors.New("版本不存在")
+	}
+	return &version, nil
 }

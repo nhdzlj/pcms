@@ -13,6 +13,21 @@
 
       <div style="display: flex; gap: 8px">
         <el-select
+          v-model="tagFilter"
+          placeholder="标签筛选"
+          clearable
+          size="default"
+          style="width: 150px"
+          @change="loadData"
+        >
+          <el-option
+            v-for="tag in allTags"
+            :key="tag.id"
+            :label="tag.name"
+            :value="tag.id"
+          />
+        </el-select>
+        <el-select
           v-model="statusFilter"
           placeholder="状态"
           clearable
@@ -55,6 +70,20 @@
             {{ row.category.name }}
           </el-tag>
           <span v-else style="color: #c0c4cc">未分类</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="标签" width="160">
+        <template #default="{ row }">
+          <el-tag
+            v-for="tag in row.tags"
+            :key="tag.id"
+            size="small"
+            type="warning"
+            effect="plain"
+            style="margin-right: 4px"
+          >
+            {{ tag.name }}
+          </el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="status" label="状态" width="90">
@@ -111,6 +140,8 @@ import { Plus, Document } from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
 import { useDocumentStore } from "@/stores/document";
 import { useCategoryStore } from "@/stores/category";
+import { getTags } from "@/api/tag";
+import type { Tag } from "@/api/tag";
 
 const route = useRoute();
 const router = useRouter();
@@ -118,6 +149,8 @@ const docStore = useDocumentStore();
 const catStore = useCategoryStore();
 
 const statusFilter = ref("");
+const tagFilter = ref<number | "">("");
+const allTags = ref<Tag[]>([]);
 
 const statusMap: Record<string, string> = {
   draft: "草稿",
@@ -154,6 +187,7 @@ async function loadData() {
     page: docStore.currentPage,
     category_id: categoryId,
     status: statusFilter.value || undefined,
+    tag_id: tagFilter.value || undefined,
   });
 }
 
@@ -177,7 +211,12 @@ watch(() => route.query.category_id, () => {
   loadData();
 });
 
-onMounted(() => {
+onMounted(async () => {
+  try {
+    allTags.value = await getTags();
+  } catch {
+    // ignore
+  }
   loadData();
 });
 </script>

@@ -42,16 +42,29 @@ import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { Plus } from "@element-plus/icons-vue";
 import { useDocumentStore } from "@/stores/document";
+import { useCategoryStore } from "@/stores/category";
 import DocumentCard from "@/components/DocumentCard.vue";
 
 const router = useRouter();
 const docStore = useDocumentStore();
+const catStore = useCategoryStore();
 const loading = ref(false);
+
+function countCategories(tree: any[]): number {
+  let count = 0;
+  for (const item of tree) {
+    count++;
+    if (item.children) {
+      count += countCategories(item.children);
+    }
+  }
+  return count;
+}
 
 const stats = computed(() => [
   { label: "总文档", value: docStore.total },
   { label: "最近更新", value: docStore.documents.length },
-  { label: "分类数", value: 0 },
+  { label: "分类数", value: countCategories(catStore.tree) },
 ]);
 
 const recentDocs = computed(() => docStore.documents.slice(0, 12));
@@ -59,7 +72,7 @@ const recentDocs = computed(() => docStore.documents.slice(0, 12));
 onMounted(async () => {
   loading.value = true;
   try {
-    await docStore.fetchList({ page: 1 });
+    await Promise.all([docStore.fetchList({ page: 1 }), catStore.fetchTree()]);
   } finally {
     loading.value = false;
   }

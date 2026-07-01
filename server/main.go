@@ -48,15 +48,17 @@ func main() {
 	categoryService := services.NewCategoryService(db)
 	documentService := services.NewDocumentService(db)
 	tagService := services.NewTagService(db)
+	attachmentService := services.NewAttachmentService(db)
 
 	// 初始化 Handler
 	authHandler := handlers.NewAuthHandler(authService)
 	categoryHandler := handlers.NewCategoryHandler(categoryService)
 	documentHandler := handlers.NewDocumentHandler(documentService)
 	tagHandler := handlers.NewTagHandler(tagService)
+	attachmentHandler := handlers.NewAttachmentHandler(attachmentService)
 
 	// 设置路由
-	r := routes.SetupRouter(authHandler, categoryHandler, documentHandler, tagHandler)
+	r := routes.SetupRouter(authHandler, categoryHandler, documentHandler, tagHandler, attachmentHandler)
 
 	// 启动服务
 	addr := fmt.Sprintf(":%s", cfg.ServerPort)

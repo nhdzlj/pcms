@@ -7,8 +7,10 @@ import {
   createDocument,
   updateDocument,
   deleteDocument,
+  getDocumentVersions,
+  getDocumentVersion,
 } from "@/api/document";
-import type { Document, CreateDocumentParams, UpdateDocumentParams, PaginatedResult } from "@/api/document";
+import type { Document, CreateDocumentParams, UpdateDocumentParams, PaginatedResult, DocumentVersion } from "@/api/document";
 
 export const useDocumentStore = defineStore("document", () => {
   const documents = ref<Document[]>([]);
@@ -17,6 +19,8 @@ export const useDocumentStore = defineStore("document", () => {
   const loading = ref(false);
   const currentPage = ref(1);
   const pageSize = ref(20);
+  const versions = ref<DocumentVersion[]>([]);
+  const currentVersion = ref<DocumentVersion | null>(null);
 
   async function fetchList(params?: {
     page?: number;
@@ -40,10 +44,15 @@ export const useDocumentStore = defineStore("document", () => {
     }
   }
 
-  async function search(keyword: string, page = 1) {
+  async function search(keyword: string, page = 1, params?: { tag_id?: number; category_id?: number }) {
     loading.value = true;
     try {
-      const result = await searchDocuments(keyword, page, pageSize.value);
+      const result = await searchDocuments({
+        keyword,
+        page,
+        page_size: pageSize.value,
+        ...params,
+      });
       documents.value = result.list;
       total.value = result.pagination.total;
       currentPage.value = result.pagination.page;
@@ -78,6 +87,15 @@ export const useDocumentStore = defineStore("document", () => {
     await fetchList();
   }
 
+  async function fetchVersions(documentId: number) {
+    versions.value = await getDocumentVersions(documentId);
+  }
+
+  async function fetchVersion(documentId: number, versionId: number) {
+    currentVersion.value = await getDocumentVersion(documentId, versionId);
+    return currentVersion.value;
+  }
+
   return {
     documents,
     current,
@@ -85,11 +103,15 @@ export const useDocumentStore = defineStore("document", () => {
     loading,
     currentPage,
     pageSize,
+    versions,
+    currentVersion,
     fetchList,
     search,
     fetchById,
     create,
     update,
     remove,
+    fetchVersions,
+    fetchVersion,
   };
 });

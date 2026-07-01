@@ -2,27 +2,62 @@
   <div>
     <!-- 搜索栏 -->
     <div style="margin-bottom: 24px">
-      <el-input
-        v-model="keyword"
-        placeholder="搜索文档标题和内容..."
-        size="large"
-        clearable
-        @keyup.enter="handleSearch"
-        @clear="handleClear"
-      >
-        <template #prefix>
-          <el-icon><Search /></el-icon>
-        </template>
-        <template #append>
-          <el-button
-            type="primary"
-            @click="handleSearch"
-            :loading="loading"
-          >
-            搜索
-          </el-button>
-        </template>
-      </el-input>
+      <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 12px">
+        <el-input
+          v-model="keyword"
+          placeholder="搜索文档标题和内容..."
+          size="large"
+          clearable
+          @keyup.enter="handleSearch"
+          @clear="handleClear"
+          style="flex: 1"
+        >
+          <template #prefix>
+            <el-icon><Search /></el-icon>
+          </template>
+          <template #append>
+            <el-button
+              type="primary"
+              @click="handleSearch"
+              :loading="loading"
+            >
+              搜索
+            </el-button>
+          </template>
+        </el-input>
+      </div>
+      <div style="display: flex; gap: 8px">
+        <el-select
+          v-model="tagFilter"
+          placeholder="标签筛选"
+          clearable
+          size="small"
+          style="width: 150px"
+          @change="handleSearch"
+        >
+          <el-option
+            v-for="tag in allTags"
+            :key="tag.id"
+            :label="tag.name"
+            :value="tag.id"
+          />
+        </el-select>
+        <el-select
+          v-model="categoryFilter"
+          placeholder="分类筛选"
+          clearable
+          size="small"
+          style="width: 180px"
+          @change="handleSearch"
+        >
+          <el-option
+            v-for="cat in flatCategories"
+            :key="cat.id"
+            :label="'　'.repeat(cat.depth) + cat.name"
+            :value="cat.id"
+          />
+        </el-select>
+      </div>
     </div>
 
     <!-- 搜索结果提示 -->
@@ -98,19 +133,55 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import { Search, Document } from "@element-plus/icons-vue";
 import { useDocumentStore } from "@/stores/document";
+import { useCategoryStore } from "@/stores/category";
+import { getTags } from "@/api/tag";
+import type { Tag } from "@/api/tag";
 
 const router = useRouter();
 const docStore = useDocumentStore();
+const catStore = useCategoryStore();
 
 const keyword = ref("");
 const searched = ref(false);
 const searchedKeyword = ref("");
 const loading = ref(false);
+const tagFilter = ref<number | "">("");
+const categoryFilter = ref<number | "">("");
+
+const allTags = ref<Tag[]>([]);
+
+interface FlatCategory {
+  id: number;
+  name: string;
+  depth: number;
+}
+
+function flattenTree(categories: any[], depth = 0): FlatCategory[] {
+  const result: FlatCategory[] = [];
+  for (const cat of categories) {
+    result.push({ id: cat.id, name: cat.name, depth });
+    if (cat.children) {
+      result.push(...flattenTree(cat.children, depth + 1));
+    }
+  }
+  return result;
+}
+
+const flatCategories = computed(() => flattenTree(catStore.tree));
+
+onMounted(async () => {
+  try {
+    const [tags] = await Promise.all([getTags(), catStore.fetchTree()]);
+    allTags.value = tags;
+  } catch {
+    // ignore
+  }
+});
 
 async function handleSearch() {
   const kw = keyword.value.trim();
@@ -123,7 +194,10 @@ async function handleSearch() {
   searched.value = true;
   searchedKeyword.value = kw;
   try {
-    await docStore.search(kw, 1);
+    await docStore.search(kw, 1, {
+      tag_id: tagFilter.value || undefined,
+      category_id: categoryFilter.value || undefined,
+    });
   } finally {
     loading.value = false;
   }
@@ -133,10 +207,15 @@ function handleClear() {
   searched.value = false;
   searchedKeyword.value = "";
   keyword.value = "";
+  tagFilter.value = "";
+  categoryFilter.value = "";
 }
 
 function handlePageChange(page: number) {
-  docStore.search(searchedKeyword.value, page);
+  docStore.search(searchedKeyword.value, page, {
+    tag_id: tagFilter.value || undefined,
+    category_id: categoryFilter.value || undefined,
+  });
 }
 
 function handleRowClick(row: any) {

@@ -37,9 +37,17 @@ func (h *DocumentHandler) List(c *gin.Context) {
 		}
 	}
 
+	var tagID *uint64
+	if tidStr := c.Query("tag_id"); tidStr != "" {
+		tid, err := strconv.ParseUint(tidStr, 10, 64)
+		if err == nil {
+			tagID = &tid
+		}
+	}
+
 	status := c.DefaultQuery("status", "")
 
-	result, err := h.Service.List(h.getUserID(c), page, pageSize, categoryID, status)
+	result, err := h.Service.List(h.getUserID(c), page, pageSize, categoryID, status, tagID)
 	if err != nil {
 		utils.InternalError(c, err.Error())
 		return
@@ -57,7 +65,23 @@ func (h *DocumentHandler) Search(c *gin.Context) {
 
 	page, pageSize := utils.GetPagination(c)
 
-	result, err := h.Service.Search(h.getUserID(c), keyword, page, pageSize)
+	var tagID *uint64
+	if tidStr := c.Query("tag_id"); tidStr != "" {
+		tid, err := strconv.ParseUint(tidStr, 10, 64)
+		if err == nil {
+			tagID = &tid
+		}
+	}
+
+	var categoryID *uint64
+	if cidStr := c.Query("category_id"); cidStr != "" {
+		cid, err := strconv.ParseUint(cidStr, 10, 64)
+		if err == nil {
+			categoryID = &cid
+		}
+	}
+
+	result, err := h.Service.Search(h.getUserID(c), keyword, page, pageSize, tagID, categoryID)
 	if err != nil {
 		utils.InternalError(c, err.Error())
 		return
@@ -135,4 +159,42 @@ func (h *DocumentHandler) Delete(c *gin.Context) {
 	}
 
 	utils.Success(c, nil)
+}
+
+// GetVersions 获取文档版本列表
+func (h *DocumentHandler) GetVersions(c *gin.Context) {
+	docID, err := h.getID(c)
+	if err != nil {
+		utils.BadRequest(c, "参数错误")
+		return
+	}
+
+	versions, err := h.Service.GetVersions(h.getUserID(c), docID)
+	if err != nil {
+		utils.BadRequest(c, err.Error())
+		return
+	}
+	utils.Success(c, versions)
+}
+
+// GetVersion 获取文档指定版本
+func (h *DocumentHandler) GetVersion(c *gin.Context) {
+	docID, err := h.getID(c)
+	if err != nil {
+		utils.BadRequest(c, "参数错误")
+		return
+	}
+
+	versionID, err := strconv.ParseUint(c.Param("vid"), 10, 64)
+	if err != nil {
+		utils.BadRequest(c, "参数错误")
+		return
+	}
+
+	version, err := h.Service.GetVersion(h.getUserID(c), docID, versionID)
+	if err != nil {
+		utils.BadRequest(c, err.Error())
+		return
+	}
+	utils.Success(c, version)
 }

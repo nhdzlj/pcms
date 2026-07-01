@@ -46,15 +46,24 @@ export interface ListDocumentsParams {
   page_size?: number;
   category_id?: number;
   status?: string;
+  tag_id?: number;
+}
+
+export interface SearchDocumentsParams {
+  keyword: string;
+  page?: number;
+  page_size?: number;
+  tag_id?: number;
+  category_id?: number;
 }
 
 export function listDocuments(params?: ListDocumentsParams) {
   return request.get<any, PaginatedResult<Document>>("/documents", { params });
 }
 
-export function searchDocuments(keyword: string, page = 1, pageSize = 20) {
+export function searchDocuments(params: SearchDocumentsParams) {
   return request.get<any, PaginatedResult<Document>>("/documents/search", {
-    params: { keyword, page, page_size: pageSize },
+    params,
   });
 }
 
@@ -72,4 +81,22 @@ export function updateDocument(id: number, params: UpdateDocumentParams) {
 
 export function deleteDocument(id: number) {
   return request.delete(`/documents/${id}`);
+}
+
+// 文档版本相关
+export interface DocumentVersion {
+  id: number;
+  document_id: number;
+  version: number;
+  title: string;
+  content: string;
+  created_at: string;
+}
+
+export function getDocumentVersions(documentId: number) {
+  return request.get<any, DocumentVersion[]>(`/documents/${documentId}/versions`);
+}
+
+export function getDocumentVersion(documentId: number, versionId: number) {
+  return request.get<any, DocumentVersion>(`/documents/${documentId}/versions/${versionId}`);
 }
