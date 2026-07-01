@@ -1,0 +1,25 @@
+# 环境变量
+.env
+
+# Go
+server/uploads/
+*.exe
+*.exe~
+*.log
+
+# Node
+web/node_modules/
+web/dist/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker
+docker-compose.override.yml
+
+# OS
+.DS_Store
+Thumbs.db
