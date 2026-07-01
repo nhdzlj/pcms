@@ -60,7 +60,7 @@ DB_PORT=5342
 SERVER_PORT=8081
 
 # 前端配置
-WEB_PORT=80
+WEB_PORT=83
 
 # JWT 密钥 (生产环境请修改为复杂随机字符串)
 JWT_SECRET=$randomSecret
