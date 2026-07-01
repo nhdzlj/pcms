@@ -54,7 +54,7 @@ function Generate-Env {
         $randomSecret = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 32 | ForEach-Object { [char]$_ })
         @"
 # 数据库配置
-DB_PORT=5432
+DB_PORT=5342
 
 # 后端配置
 SERVER_PORT=8081

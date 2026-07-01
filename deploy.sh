@@ -47,7 +47,7 @@ generate_env() {
         log_info "生成 .env 配置文件..."
         cat > .env << EOF
 # 数据库配置
-DB_PORT=5432
+DB_PORT=5342
 
 # 后端配置
 SERVER_PORT=8081
