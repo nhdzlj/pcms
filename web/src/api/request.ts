@@ -23,7 +23,7 @@ request.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// 响应拦截器
+// 响应拦截器 —— 自动解包 {code, message, data} 返回 data
 request.interceptors.response.use(
   (response: AxiosResponse) => {
     const res = response.data;
@@ -31,7 +31,7 @@ request.interceptors.response.use(
       ElMessage.error(res.message || "请求失败");
       return Promise.reject(new Error(res.message));
     }
-    return res;
+    return res.data;
   },
   (error) => {
     if (error.response) {
