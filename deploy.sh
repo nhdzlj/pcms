@@ -73,7 +73,7 @@ start_services() {
     # 拉取基础镜像
     log_info "拉取基础镜像..."
     docker pull postgres:16-alpine
-    docker pull golang:1.22-alpine
+    docker pull golang:1.25-alpine
     docker pull node:20-alpine
     docker pull alpine:3.19
     docker pull nginx:1.25-alpine
