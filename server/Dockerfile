@@ -8,12 +8,12 @@ ENV GOPROXY=https://goproxy.cn,direct
 
 WORKDIR /build
 
-# 先复制依赖文件
-COPY go.mod go.sum* ./
-RUN go mod download 2>/dev/null || go mod tidy
-
-# 复制源码
+# 先把 go.mod 和源码都复制进来（go mod tidy 需要解析 import）
+COPY go.mod ./
 COPY . .
+# 生成 go.sum 并下载依赖
+RUN go mod tidy
+# 构建
 RUN go build -ldflags="-s -w" -o /app/pcms-server main.go
 
 # ============================================
