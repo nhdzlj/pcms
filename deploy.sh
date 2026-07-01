@@ -47,13 +47,13 @@ generate_env() {
         log_info "生成 .env 配置文件..."
         cat > .env << EOF
 # 数据库配置
-DB_PORT=5432
+DB_PORT=5342
 
 # 后端配置
 SERVER_PORT=8081
 
 # 前端配置
-WEB_PORT=80
+WEB_PORT=83
 
 # JWT 密钥 (生产环境请修改为复杂随机字符串)
 JWT_SECRET=$(openssl rand -base64 32 2>/dev/null || echo "pcms-jwt-$(date +%s)")
@@ -73,7 +73,7 @@ start_services() {
     # 拉取基础镜像
     log_info "拉取基础镜像..."
     docker pull postgres:16-alpine
-    docker pull golang:1.22-alpine
+    docker pull golang:1.25-alpine
     docker pull node:20-alpine
     docker pull alpine:3.19
     docker pull nginx:1.25-alpine

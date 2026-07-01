@@ -54,13 +54,13 @@ function Generate-Env {
         $randomSecret = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 32 | ForEach-Object { [char]$_ })
         @"
 # 数据库配置
-DB_PORT=5432
+DB_PORT=5342
 
 # 后端配置
 SERVER_PORT=8081
 
 # 前端配置
-WEB_PORT=80
+WEB_PORT=83
 
 # JWT 密钥 (生产环境请修改为复杂随机字符串)
 JWT_SECRET=$randomSecret
@@ -79,7 +79,7 @@ function Start-Services {
 
     Write-Info "拉取基础镜像..."
     docker pull postgres:16-alpine
-    docker pull golang:1.22-alpine
+    docker pull golang:1.25-alpine
     docker pull node:20-alpine
     docker pull alpine:3.19
     docker pull nginx:1.25-alpine
