@@ -177,30 +177,56 @@ pcms/
 - [x] 用户注册/登录 (JWT)
 - [x] 无限级分类管理（树形 + 拖拽）
 - [x] 文档 CRUD（Markdown 编辑 + 预览）
-- [x] 文件上传（图片）
-- [x] 全文搜索
-- [x] 标签系统
-- [x] 文档版本管理
+- [x] 摘要编辑
+- [x] 标签系统（选择 + 新建 + 筛选）
+- [x] 文件上传（图片 + 附件管理）
+- [x] 全文搜索（支持分类/标签筛选）
+- [x] 文档版本管理（历史查看）
 - [ ] AI 润色（下一步）
 - [ ] RAG 检索（下一步）
 
 ## API 概览
 
+### 认证
 | Method | Path | 说明 |
 |--------|------|------|
 | POST | /api/v1/auth/register | 注册 |
 | POST | /api/v1/auth/login | 登录 |
 | GET | /api/v1/auth/me | 当前用户 |
+
+### 分类
+| Method | Path | 说明 |
+|--------|------|------|
 | GET | /api/v1/categories | 分类树 |
 | POST | /api/v1/categories | 创建分类 |
 | PUT | /api/v1/categories/:id | 更新分类 |
 | DELETE | /api/v1/categories/:id | 删除分类 |
 | PUT | /api/v1/categories/:id/move | 移动分类 |
-| GET | /api/v1/documents | 文档列表 |
+
+### 文档
+| Method | Path | 说明 |
+|--------|------|------|
+| GET | /api/v1/documents | 文档列表（支持 `category_id`、`status`、`tag_id` 筛选） |
 | POST | /api/v1/documents | 创建文档 |
+| GET | /api/v1/documents/search | 搜索（支持 `keyword`、`tag_id`、`category_id` 筛选） |
 | GET | /api/v1/documents/:id | 文档详情 |
 | PUT | /api/v1/documents/:id | 更新文档 |
 | DELETE | /api/v1/documents/:id | 删除文档 |
-| GET | /api/v1/documents/search | 搜索 |
+| GET | /api/v1/documents/:id/versions | 版本列表 |
+| GET | /api/v1/documents/:id/versions/:vid | 版本详情 |
+
+### 标签
+| Method | Path | 说明 |
+|--------|------|------|
+| GET | /api/v1/tags | 标签列表 |
+| POST | /api/v1/tags | 创建标签 |
+| DELETE | /api/v1/tags/:id | 删除标签 |
+
+### 文件 & 附件
+| Method | Path | 说明 |
+|--------|------|------|
 | POST | /api/v1/files/upload | 上传文件 |
-| GET/POST | /api/v1/tags | 标签管理 |
+| GET | /api/v1/attachments | 附件列表 |
+| POST | /api/v1/attachments | 创建附件记录 |
+| DELETE | /api/v1/attachments/:id | 删除附件 |
+| PUT | /api/v1/attachments/:id/bind | 绑定附件到文档 |
