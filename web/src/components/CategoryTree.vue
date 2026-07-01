@@ -22,7 +22,7 @@
       @node-drop="handleDrop"
     >
       <template #default="{ node, data }">
-        <div class="tree-node-content" @contextmenu.prevent="handleContextMenu($event, data, node)">
+        <div class="tree-node-content" @contextmenu.prevent="handleContextMenu($event, data)">
           <el-icon style="margin-right: 6px; font-size: 16px">
             <Folder v-if="node.childNodes.length > 0 || !node.parent" />
             <Document v-else />
