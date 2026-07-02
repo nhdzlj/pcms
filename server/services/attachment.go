@@ -4,15 +4,14 @@ import (
 	"errors"
 
 	"pcms/models"
-
-	"gorm.io/gorm"
+	"pcms/store"
 )
 
 type AttachmentService struct {
-	DB *gorm.DB
+	DB store.Store
 }
 
-func NewAttachmentService(db *gorm.DB) *AttachmentService {
+func NewAttachmentService(db store.Store) *AttachmentService {
 	return &AttachmentService{DB: db}
 }
 
@@ -27,20 +26,18 @@ type ListAttachmentQuery struct {
 	DocumentID *uint64
 }
 
-// List 获取附件列表
 func (s *AttachmentService) List(userID uint64, query ListAttachmentQuery) ([]*models.Attachment, error) {
 	var attachments []*models.Attachment
-	q := s.DB.Where("user_id = ?", userID)
+	q := s.DB.Where("UserID = ?", userID)
 	if query.DocumentID != nil {
-		q = q.Where("document_id = ?", *query.DocumentID)
+		q = q.Where("DocumentID = ?", *query.DocumentID)
 	}
-	if err := q.Order("created_at DESC").Find(&attachments).Error; err != nil {
+	if err := q.Order("CreatedAt DESC").Find(&attachments); err != nil {
 		return nil, errors.New("获取附件列表失败")
 	}
 	return attachments, nil
 }
 
-// Create 创建附件记录
 func (s *AttachmentService) Create(userID uint64, input CreateAttachmentInput, documentID *uint64) (*models.Attachment, error) {
 	attachment := &models.Attachment{
 		DocumentID: documentID,
@@ -50,28 +47,23 @@ func (s *AttachmentService) Create(userID uint64, input CreateAttachmentInput, d
 		MimeType:   input.MimeType,
 		UserID:     userID,
 	}
-	if err := s.DB.Create(attachment).Error; err != nil {
+	if err := s.DB.Create(attachment); err != nil {
 		return nil, errors.New("创建附件记录失败")
 	}
 	return attachment, nil
 }
 
-// Delete 删除附件
 func (s *AttachmentService) Delete(userID uint64, id uint64) error {
-	result := s.DB.Where("id = ? AND user_id = ?", id, userID).Delete(&models.Attachment{})
-	if result.RowsAffected == 0 {
+	if err := s.DB.Delete(&models.Attachment{}, id, "UserID = ?", userID); err != nil {
 		return errors.New("附件不存在")
 	}
-	return result.Error
+	return nil
 }
 
-// BindDocument 关联附件到文档
 func (s *AttachmentService) BindDocument(userID uint64, id uint64, documentID uint64) error {
-	result := s.DB.Model(&models.Attachment{}).
-		Where("id = ? AND user_id = ?", id, userID).
-		Update("document_id", documentID)
-	if result.RowsAffected == 0 {
+	if err := s.DB.Model(&models.Attachment{}).Where("ID = ? AND UserID = ?", id, userID).
+		Updates(map[string]interface{}{"DocumentID": documentID}); err != nil {
 		return errors.New("附件不存在")
 	}
-	return result.Error
+	return nil
 }

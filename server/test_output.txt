@@ -1,0 +1,52 @@
+--- FAIL: TestAttachmentService_List (0.00s)
+    attachment_test.go:52: 期望 2 个, 得到 0
+--- FAIL: TestAttachmentService_Delete (0.00s)
+    attachment_test.go:67: 期望报错
+--- FAIL: TestAuthService_GetUserByID (0.06s)
+    --- FAIL: TestAuthService_GetUserByID/不存在的用户 (0.00s)
+        auth_test.go:106: 期望报错
+--- FAIL: TestCategoryService_Move (0.00s)
+    --- FAIL: TestCategoryService_Move/移动 (0.00s)
+        category_test.go:131: ParentID 应为 1
+--- FAIL: TestDocumentService_Create (0.00s)
+    document_test.go:28: 默认 status=draft, 得到 
+--- FAIL: TestDocumentService_Delete (0.00s)
+    document_test.go:89: 期望报错
+--- FAIL: TestDocumentService_UserIsolation (0.00s)
+    document_test.go:99: 用户 2 不应访问用户 1 的文档
+--- FAIL: TestTagService_Delete (0.00s)
+    --- FAIL: TestTagService_Delete/标签不存在 (0.00s)
+        tag_test.go:75: 期望报错
+FAIL
+FAIL	pcms/services	1.317s
+ok  	pcms/utils	1.044s
+--- FAIL: TestFile_Serve (0.06s)
+    --- FAIL: TestFile_Serve/found (0.00s)
+panic: runtime error: invalid memory address or nil pointer dereference [recovered, repanicked]
+[signal 0xc0000005 code=0x0 addr=0x40 pc=0xe133dd]
+
+goroutine 41 [running]:
+testing.tRunner.func1.2({0xe9e4a0, 0x125a630})
+	D:/Program Files (x86)/Go/src/testing/testing.go:1872 +0x291
+testing.tRunner.func1()
+	D:/Program Files (x86)/Go/src/testing/testing.go:1875 +0x3fb
+panic({0xe9e4a0, 0x125a630})
+	D:/Program Files (x86)/Go/src/runtime/panic.go:783 +0xf6
+pcms/handlers.ServeFile(0x2113f48)
+	e:/data/pcms/server/handlers/file.go:73 +0xad
+github.com/gin-gonic/gin.(*Context).Next(...)
+	E:/golangprojects/pkg/mod/github.com/gin-gonic/gin@v1.9.1/context.go:174
+github.com/gin-gonic/gin.(*Engine).handleHTTPRequest(0x23670a8, 0x2113f48)
+	E:/golangprojects/pkg/mod/github.com/gin-gonic/gin@v1.9.1/gin.go:620 +0x4d9
+github.com/gin-gonic/gin.(*Engine).ServeHTTP(0x23670a8, {0xfa6580, 0x23cfd80}, 0x24051e8)
+	E:/golangprojects/pkg/mod/github.com/gin-gonic/gin@v1.9.1/gin.go:576 +0x192
+pcms.doReq(0x23670a8, {0xef34ff, 0x3}, {0xf0fa75, 0x21}, {0x0, 0x0}, {0x0, 0x0})
+	e:/data/pcms/server/handler_test.go:125 +0x38f
+pcms.TestFile_Serve.func1(0x23c2fc8)
+	e:/data/pcms/server/handler_test.go:440 +0x66
+testing.tRunner(0x23c2fc8, 0x2416190)
+	D:/Program Files (x86)/Go/src/testing/testing.go:1934 +0xc2
+created by testing.(*T).Run in goroutine 40
+	D:/Program Files (x86)/Go/src/testing/testing.go:1997 +0x467
+FAIL	pcms	1.997s
+FAIL

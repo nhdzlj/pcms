@@ -7,7 +7,7 @@
 | 层级 | 技术 |
 |------|------|
 | 前端 | Vue 3 + TypeScript + Element Plus + Pinia |
-| 后端 | Go + Gin + GORM |
+| 后端 | Go + Gin + GORM（Store 抽象层，支持 MemStore 测试） |
 | 数据库 | PostgreSQL 16 |
 | 认证 | JWT |
 
@@ -137,6 +137,13 @@ npm run dev
 
 开发服务在 `http://localhost:3000`，API 自动代理到后端。
 
+### 4. 运行测试
+
+```bash
+cd server
+go test ./...
+```
+
 ---
 
 ## 项目结构
@@ -160,6 +167,7 @@ pcms/
 │   ├── handlers/            # 请求处理
 │   ├── services/            # 业务逻辑
 │   ├── routes/              # 路由
+│   ├── store/               # 数据访问抽象层（GORM / MemStore）
 │   └── utils/               # 工具
 └── web/                     # Vue 3 前端
     ├── Dockerfile
@@ -184,6 +192,31 @@ pcms/
 - [x] 文档版本管理（历史查看）
 - [ ] AI 润色（下一步）
 - [ ] RAG 检索（下一步）
+
+## 单元测试
+
+后端全部接口均有单元测试覆盖，无需外部数据库依赖（使用内存 Store）。
+
+```bash
+# 运行所有测试
+cd server
+go test ./...
+
+# 按模块运行
+go test ./services   # 业务逻辑测试
+go test ./utils      # 工具测试（JWT / 分页 / 响应）
+go test .            # HTTP 接口测试（Handler 层）
+```
+
+| 测试范围 | 测试文件 | 覆盖接口 |
+|---------|---------|---------|
+| Auth | `services/auth_test.go` + `handler_test.go` | 注册、登录、当前用户 |
+| Category | `services/category_test.go` + `handler_test.go` | CRUD、移动、树形结构 |
+| Document | `services/document_test.go` + `handler_test.go` | CRUD、搜索、版本、标签筛选 |
+| Tag | `services/tag_test.go` + `handler_test.go` | 创建、去重、删除、隔离 |
+| Attachment | `services/attachment_test.go` + `handler_test.go` | 附件 CRUD、绑定文档 |
+| File | `handler_test.go` | 文件上传、静态服务、目录遍历防护 |
+| Utils | `utils/utils_test.go` | JWT 签发/解析、分页、响应格式 |
 
 ## API 概览
 

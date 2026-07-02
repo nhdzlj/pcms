@@ -4,17 +4,17 @@ import (
 	"errors"
 
 	"pcms/models"
+	"pcms/store"
 	"pcms/utils"
 
 	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
 )
 
 type AuthService struct {
-	DB *gorm.DB
+	DB store.Store
 }
 
-func NewAuthService(db *gorm.DB) *AuthService {
+func NewAuthService(db store.Store) *AuthService {
 	return &AuthService{DB: db}
 }
 
@@ -35,14 +35,14 @@ type AuthResult struct {
 }
 
 func (s *AuthService) Register(input RegisterInput) (*AuthResult, error) {
-	// 检查用户名是否存在
 	var count int64
-	s.DB.Model(&models.User{}).Where("username = ?", input.Username).Count(&count)
+	if err := s.DB.Model(&models.User{}).Where("Username = ?", input.Username).Count(&count); err != nil {
+		return nil, errors.New("查询用户名失败")
+	}
 	if count > 0 {
 		return nil, errors.New("用户名已存在")
 	}
 
-	// 加密密码
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, errors.New("密码加密失败")
@@ -54,32 +54,24 @@ func (s *AuthService) Register(input RegisterInput) (*AuthResult, error) {
 		Email:    input.Email,
 	}
 
-	if err := s.DB.Create(user).Error; err != nil {
+	if err := s.DB.Create(user); err != nil {
 		return nil, errors.New("创建用户失败")
 	}
 
-	// 生成 token
 	token, err := utils.GenerateToken(user.ID, user.Username)
 	if err != nil {
 		return nil, errors.New("生成令牌失败")
 	}
 
-	return &AuthResult{
-		Token: token,
-		User:  user,
-	}, nil
+	return &AuthResult{Token: token, User: user}, nil
 }
 
 func (s *AuthService) Login(input LoginInput) (*AuthResult, error) {
 	var user models.User
-	if err := s.DB.Where("username = ?", input.Username).First(&user).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("用户名或密码错误")
-		}
-		return nil, errors.New("查询用户失败")
+	if err := s.DB.Where("Username = ?", input.Username).First(&user); err != nil {
+		return nil, errors.New("用户名或密码错误")
 	}
 
-	// 验证密码
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)); err != nil {
 		return nil, errors.New("用户名或密码错误")
 	}
@@ -89,15 +81,12 @@ func (s *AuthService) Login(input LoginInput) (*AuthResult, error) {
 		return nil, errors.New("生成令牌失败")
 	}
 
-	return &AuthResult{
-		Token: token,
-		User:  &user,
-	}, nil
+	return &AuthResult{Token: token, User: &user}, nil
 }
 
 func (s *AuthService) GetUserByID(id uint64) (*models.User, error) {
 	var user models.User
-	if err := s.DB.First(&user, id).Error; err != nil {
+	if err := s.DB.First(&user, id); err != nil {
 		return nil, errors.New("用户不存在")
 	}
 	return &user, nil
